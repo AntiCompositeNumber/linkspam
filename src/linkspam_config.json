@@ -1,0 +1,26 @@
+{
+    "blackwell-synergy.com":{
+        "title": "blackwell-synergy.com",
+        "frequency": "8 hours",
+        "last_update": "",
+        "status": "new",
+        "description": "This domain used to belong to an academic journal, but the domain fell unregistred after the journal was aquired by Wiley and it now hosts spam. Links should be replaced with DOIs where possible.",
+        "summary": {
+            "en": "Replacing links to hijacked website, see [[:m:Steward_requests/Miscellaneous#Hijacked_domain_and_predatory_spam|here]]",
+            "fr": "Remplacement des liens à une site détourné ([[:m:Steward_requests/Miscellaneous#Hijacked_domain_and_predatory_spam|Plus d'information]])",
+            "pt": "corrigindo DOI de site \"sequestrado\", ver [[:m:Steward_requests/Miscellaneous#Hijacked_domain_and_predatory_spam|aqui]]"
+        }
+    },
+    "gaylesbiantimes.com":{
+        "title": "gaylesbiantimes.com",
+        "frequency": "manual",
+        "last_update": "",
+        "status": "new",
+        "description": "This domain belonged to the Gay & Lesbian Times, a weekly newsmagazine focusing on LGBTQ issues. The Wayback Machine stopped being able to access the site in 2016, and it was replaced with spam in 2018.",
+        "summary": {
+            "en": "Replacing links to hijacked website, see [[:m:Steward_requests/Miscellaneous#Hijacked_domain_and_predatory_spam|here]]",
+            "fr": "Remplacement des liens à une site détourné ([[:m:Steward_requests/Miscellaneous#Hijacked_domain_and_predatory_spam|Plus d'information]])"
+        }
+    }
+   
+}
