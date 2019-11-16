@@ -10,13 +10,13 @@
     <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/font-awesome/5.11.2/css/fontawesome.css">
     <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/font-awesome/5.11.2/css/brands.css">
     {% block head %}
-    <title>{% block title %}{% endblock %} - AntiCompositeTools</title>
+    <title>{% block title %}{% endblock %} - Linkspam</title>
     {% endblock %}
   </head>
   <body class="bg-light">
 
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-      <a class="navbar-brand" href="{{url_for('index')}}">AntiCompositeTools</a>
+      <a class="navbar-brand" href="{{url_for('linksearch')}}">Linkspam</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -29,8 +29,7 @@
             </li>
           {%- endmacro %}
 
-          {{ nav_row('index', 'Home') }} 
-          {{ nav_row('hyphenator_form', 'Hyphenator') }}
+          {{ nav_row('linksearch', 'Home') }} 
         </ul>
       </div>
     </nav>
@@ -52,7 +51,7 @@
           </div>
           <div class="col- mr-md-4">
             <a class="btn btn-dark btn-sm" href="https://en.wikipedia.org/wiki/User_talk:AntiCompositeNumber"><i class="fab fa-wikipedia-w"></i> Talk page</a>
-            <a class="btn btn-dark btn-sm" href="https://github.com/AntiCompositeNumber/anticompositetools"><i class="fab fa-github"></i> GitHub</a>
+            <a class="btn btn-dark btn-sm" href="https://github.com/AntiCompositeNumber/linkspam"><i class="fab fa-github"></i> GitHub</a>
           </div>
         </div>
       </div>
