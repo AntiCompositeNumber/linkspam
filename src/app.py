@@ -44,14 +44,14 @@ def linksearch():
     return flask.render_template('linkspam.html', data=data)
 
 
-@app.route('/job/<state>')
+@app.route('/<target>/job')
 def linksearch_job(state):
     percent = flask.request.args.get('percent', '')
     return flask.render_template('linkspam_submit.html', state=state,
                                  percent=percent)
 
 
-@app.route('/result')
+@app.route('/<target>')
 def linksearch_result():
     with open('output.json') as f:
         data = json.load(f)
