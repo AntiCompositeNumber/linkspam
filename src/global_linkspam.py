@@ -133,9 +133,13 @@ def run_check(site, runOverride):
 
 
 def save_page(new_text, target):
-    with open(target + '.json',
-              'w') as f:
+    with open(target + '.json', 'w') as f:
         json.dump(new_text, f, indent=4)
+
+    with open('linkspam_config.json', 'r+') as f:
+        linkspam_config = json.load(f)
+        linkspam_config[target]['last_update'] = new_text['start_time']
+        json.dump(linkspam_config, f, indent=4)
 
 
 def main():
