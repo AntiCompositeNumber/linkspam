@@ -23,12 +23,18 @@ import time
 from datetime import datetime
 import urllib.parse
 import json
+import os
 import argparse
 import requests
 import pywikibot
 from pywikibot import pagegenerators
 
-version = '1.2.2'
+version = '1.3.0'
+
+config = {}
+__dir__ = os.path.dirname(__file__)
+with open(os.path.join(__dir__, 'config.json')) as f:
+    config.update(json.load(f))
 
 
 def get_sitematrix():
@@ -133,10 +139,14 @@ def run_check(site, runOverride):
 
 
 def save_page(new_text, target):
-    with open(target + '.json', 'w') as f:
+    with open(
+            os.path.join(config['linkspam_data_dir'], target + '.json'),
+            'w') as f:
         json.dump(new_text, f, indent=4)
 
-    with open('linkspam_config.json', 'r+') as f:
+    with open(
+            os.path.join(config['linkspam_data_dir'], 'linkspam_config.json'),
+            'r+') as f:
         linkspam_config = json.load(f)
         linkspam_config[target]['last_update'] = new_text['start_time']
         json.dump(linkspam_config, f, indent=4)
