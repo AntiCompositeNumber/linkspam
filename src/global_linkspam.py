@@ -175,11 +175,11 @@ def main():
     # a report. Otherwise, add it to the skipped list.
     skipped = []
     site_reports = {}
-    letter = ''
+    # letter = ''
     for url in sitematrix:
-        if letter != url[8]:
-            letter = url[8]
-            print('\r' + letter)
+        # if letter != url[8]:
+        #     letter = url[8]
+        #     print(letter)
 
         try:
             cur_site = pywikibot.Site(url=url + '/wiki/MediaWiki:Delete/en')
@@ -199,7 +199,7 @@ def main():
     # Generate a summary table and stick it at the top
     output['summary_table'] = summary_table(counts)
     # Save the report
-    save_page(output)
+    save_page(output, target)
 
 
 if __name__ == '__main__':
