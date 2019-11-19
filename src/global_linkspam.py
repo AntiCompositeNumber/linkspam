@@ -146,9 +146,13 @@ def save_page(new_text, target):
 
     with open(
             os.path.join(config['linkspam_data_dir'], 'linkspam_config.json'),
-            'r+') as f:
+            'r') as f:
         linkspam_config = json.load(f)
-        linkspam_config[target]['last_update'] = new_text['start_time']
+
+    linkspam_config[target]['last_update'] = new_text['start_time']
+    with open(
+            os.path.join(config['linkspam_data_dir'], 'linkspam_config.json'),
+            'w') as f:
         json.dump(linkspam_config, f, indent=4)
 
 
