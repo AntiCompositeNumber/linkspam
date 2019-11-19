@@ -43,7 +43,8 @@ app.config['version'] = rev.stdout
 
 @app.route('/')
 def linksearch():
-    with open('linkspam_config.json') as f:
+    with open(os.path.join(app.config['linkspam_data_dir'],
+                           'linkspam_config.json')) as f:
         data = json.load(f)
 
     return flask.render_template('linkspam.html', data=data)
