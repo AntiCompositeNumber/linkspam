@@ -59,8 +59,12 @@ def linksearch():
 
 @app.route('/<target>')
 def linksearch_result(target):
-    with open(os.path.join(app.config['linkspam_data_dir'],
-                           target + '.json')) as f:
-        data = json.load(f)
-
-    return flask.render_template('linkspam_result.html', data=data)
+    try:
+        with open(os.path.join(app.config['linkspam_data_dir'],
+                               target + '.json')) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return flask.render_template(
+            'linkspam_noresult.html', target=target), 404
+    else:
+        return flask.render_template('linkspam_result.html', data=data)
