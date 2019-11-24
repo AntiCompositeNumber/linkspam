@@ -25,6 +25,7 @@ import urllib.parse
 import json
 import os
 import argparse
+import logging
 import requests
 import pywikibot
 from pywikibot import pagegenerators
@@ -98,7 +99,7 @@ def site_report(pages, site, preload_sums, report_site):
     """Generate the full linksearch report for a site"""
 
     summary = urllib.parse.quote(preload_sums.get(
-        site.code, preload_sums.get('en')))
+        site.code, preload_sums.get('en', '')))
     reports = []
 
     for page in pages:
@@ -139,20 +140,13 @@ def run_check(site, runOverride):
 
 
 def save_page(new_text, target):
-    with open(
-            os.path.join(config['linkspam_data_dir'], target + '.json'),
-            'w') as f:
+    data_dir = config['linkspam_data_dir']
+    with open(os.path.join(data_dir, target + '.json'), 'w') as f:
         json.dump(new_text, f, indent=4)
 
-    with open(
-            os.path.join(config['linkspam_data_dir'], 'linkspam_config.json'),
-            'r') as f:
+    with open(os.path.join(data_dir, 'linkspam_config.json'), 'r+') as f:
         linkspam_config = json.load(f)
-
-    linkspam_config[target]['last_update'] = new_text['start_time']
-    with open(
-            os.path.join(config['linkspam_data_dir'], 'linkspam_config.json'),
-            'w') as f:
+        linkspam_config[target]['last_update'] = new_text['start_time']
         json.dump(linkspam_config, f, indent=4)
 
 
@@ -169,10 +163,18 @@ def main():
     enwiki = pywikibot.Site('en', 'wikipedia')
     run_check(enwiki, False)
 
-    # Load preload summaries from on-wiki json
-    config = pywikibot.Page(
-        enwiki, 'User:AntiCompositeBot/HijackSpam/config.json')
-    preload_sums = json.loads(config.text)
+    # Load linkspam_config.json
+    with open(os.path.join(
+            config['linkspam_data_dir'], 'linkspam_config.json'), 'r') as f:
+        linkspam_config = json.load(f)
+
+    # Check for configuration for target
+    if linkspam_config.get(target) is None:
+        logging.warning('No config found. Using the default configs.')
+        linkspam_config[target] = linkspam_config['default']
+
+    # Load preload summaries from config
+    preload_sums = linkspam_config[target].get('summary')
 
     # Get the list of sites from get_sitematrix(), retrying once
     try:
