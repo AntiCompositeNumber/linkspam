@@ -1,0 +1,10 @@
+{
+   "default":{
+       "title": "",
+       "frequency": "manual",
+       "last_update": "",
+       "status": "default",
+       "description": "Default configuration in use. Please create a new config entry",
+       "summary": {}
+   }
+}
