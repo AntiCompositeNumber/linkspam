@@ -43,6 +43,7 @@ app.config['version'] = rev.stdout
 
 @app.route('/')
 def linksearch():
+    # Front page
     with open(os.path.join(app.config['linkspam_data_dir'],
                            'linkspam_config.json')) as f:
         data = json.load(f)
@@ -59,12 +60,16 @@ def linksearch():
 
 @app.route('/<target>')
 def linksearch_result(target):
+    # Result pages
+    # Try to load the report specified in the URL
     try:
         with open(os.path.join(app.config['linkspam_data_dir'],
                                target + '.json')) as f:
             data = json.load(f)
     except FileNotFoundError:
+        # If there is no file found, return a custom 404
         return flask.render_template(
             'linkspam_noresult.html', target=target), 404
     else:
+        # Otherwise, show the report
         return flask.render_template('linkspam_result.html', data=data)
