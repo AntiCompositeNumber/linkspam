@@ -58,6 +58,46 @@ def linksearch():
 #                                 percent=percent)
 
 
+@app.route('/api')
+def api():
+    return
+
+
+@app.route('/api/status')
+def api_status():
+    with open(os.path.join(app.config['linkspam_data_dir'],
+                           'linkspam_config.json')) as f:
+        data = json.load(f)
+
+    return data
+
+
+@app.route('/api/status/<target>')
+def api_status_target(target):
+    with open(os.path.join(app.config['linkspam_data_dir'],
+                           'linkspam_config.json')) as f:
+        data = json.load(f)
+
+    target_info = data.get(target)
+    if not target_info:
+        flask.abort(404)
+    else:
+        return target_info
+
+
+@app.route('/api/report/<target>')
+def api_report_target(target):
+    try:
+        with open(os.path.join(app.config['linkspam_data_dir'],
+                               target + '.json')) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        # If there is no file found, return 404
+        flask.abort(404)
+    else:
+        return data
+
+
 @app.route('/<target>')
 def linksearch_result(target):
     # Result pages
