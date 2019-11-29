@@ -80,9 +80,5 @@ def linksearch_status(target):
     if not target_info:
         return flask.render_template(
             'linkspam_noresult.html', target=target), 404
-    elif target_info['status'] == 'automatic':
-        return flask.render_template('status_automatic.html', data=target_info)
-    elif target_info['status'] == 'disabled':
-        return flask.render_template('status_disabled.html', data=target_info)
     else:
-        flask.abort(501)
+        return flask.render_template('status.html', data=target_info)

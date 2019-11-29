@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Linkspam Report - {{data['title']}} - Status {% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="https://tools-static.wmflabs.org/cdnjs/ajax/libs/font-awesome/5.11.2/css/solid.min.css" >
+  {{ super() }}
+  <style type="text/css">
+    .important { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+<h2 class="mb-3">{{data['title']}} report status</h2>
+{% if data['status'] == 'automatic' %}
+<div class="alert alert-success"><i class="fas fa-check" ></i><span class="ml-3">This report is running automatically.</span></div>
+{% elif data['status'] == 'disabled' %}
+<div class="alert alert-dark"><i class="fas fa-times"></i><span class="ml-3">This report has been disabled.</span></div>
+{% elif data['status'] == 'new' %}
+<div class="alert alert-primary"><i class="fas fa-clock"></i><span class="ml-3">This report is new, and has not yet been run.</span></div>
+{% endif %}
+<div>
+  <p>Description: <span>{{data['description']}}</span></p>
+  <p>Last update: {% if data['last_update'] == '' %}Never{% else %}<span>{{data['last_update']}}</span></p>{% endif %}
+  <p>Updated: {% if data['frequency'] == 'manual' %}Manually{% else %}Every {{data['frequency']}}{% endif %}</p>
+  <h4>Edit summaries:</h4>
+  <table class="table table-hover table-responsive table-sm">
+    <thead>
+      <tr>
+        <th scope="col">Language code</th>
+        <th scope="col">Edit summary</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for code, sum in data['summary'].items() %}
+      <tr>
+        <th scope="row">{{code}}</th>
+        <td>{{sum}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
