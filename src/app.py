@@ -73,3 +73,17 @@ def linksearch_result(target):
     else:
         # Otherwise, show the report
         return flask.render_template('linkspam_result.html', data=data)
+
+
+@app.route('/<target>/status')
+def linksearch_status(target):
+    with open(os.path.join(app.config['linkspam_data_dir'],
+                           'linkspam_config.json')) as f:
+        data = json.load(f)
+
+    target_info = data.get(target)
+    if not target_info:
+        return flask.render_template(
+            'linkspam_noresult.html', target=target), 404
+    else:
+        return flask.render_template('status.html', data=target_info)
