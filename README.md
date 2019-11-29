@@ -17,4 +17,15 @@ This is written based on Toolforge and uwsgi
 4. Unfortunately, kubernetes can't see the SGE grid engine and isn't a good replacement for one-off jobs yet, so this tool has to be run from a grid webservice. The built-in gridengine uwsgi-python webservice is python 2, so we have to use uwsgi-plain. Grab the uwsgi.ini from [here](https://phabricator.wikimedia.org/T104374#1911373), replace `jshint` with the tool name, and save that to the home directory.
 6. Start the webservice with `webservice --backend=gridengine uwsgi-plain start`.
 
-*These instructions are probably not complete, and are subject to change as I improve the operation of the tool.* 
+*These instructions are probably not complete, and are subject to change as I improve the operation of the tool.*
+
+## linkspam\_config.json
+
+| Field | Description |
+| --- | --- |
+| title | User-facing title of the report. Must be the domain that was scanned to generate the report. Should match the name of the report file and the key in linkspam\_config.json. Required.
+| frequency | `"manual"` or human-readable text describing how often the report is updated. Required.
+| last\_update | ISO-format UTC date time string of when the most recent report was started. If the report is not run, this field is an empty string. Required.
+| status | `"new"`, `"automatic"`, `"disabled"`. TODO: #17. Required.
+| description | User-facing description of the report. Should contain why the report exists and what should be done with the links. Required for automatic reports, optional for manual reports.
+| summary | Contains the preloaded edit summaries used in the edit links. This is an object with the wiki's language code as the key and the edit summary as the value. English is used as the default. If no edit summaries are specified, the object is empty. 
