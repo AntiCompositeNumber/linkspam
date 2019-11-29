@@ -169,9 +169,16 @@ def save_page(new_text, target):
         json.dump(new_text, f, indent=4)
 
     with open(os.path.join(data_dir, 'linkspam_config.json'), 'r+') as f:
-        # TODO issue #18
         linkspam_config = json.load(f)
         linkspam_config[target]['last_update'] = new_text['start_time']
+
+        # If the report is marked new, mark it not new.
+        if linkspam_config[target]['status'] == 'new':
+            if linkspam_config[target]['frequency'] == 'manual':
+                linkspam_config[target]['status'] = 'finished'
+            else:
+                linkspam_config[target]['status'] = 'automatic'
+
         json.dump(linkspam_config, f, indent=4)
 
 
