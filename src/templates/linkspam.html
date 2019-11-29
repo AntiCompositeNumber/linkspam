@@ -17,7 +17,7 @@
 
   <div class="container">
     <div class="card-deck">
-    {% for domain, sitedata in data|dictsort %} 
+    {% for domain, sitedata in data|dictsort if domain != 'default' %} 
       <div class="card" id="{{domain}}">
         <div class="card-body">
           <h4 class="card-title">{{ sitedata['title'] }}</h4>
