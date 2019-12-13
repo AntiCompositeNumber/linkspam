@@ -40,13 +40,7 @@ with open(os.path.join(__dir__, 'config.json')) as f:
 
 
 def get_sitematrix():
-    """Request the sitematrix from the API, check if open, then yeild URLs"""
-
-    def check_status(checksite):
-        """Return true only if wiki is public and open"""
-        return ((checksite.get('closed') is None)
-                and (checksite.get('private') is None)
-                and (checksite.get('fishbowl') is None))
+    """Request the sitematrix from the API, check if open, then yield URLs"""
 
     # Construct the request to the Extension:Sitematrix api
     payload = {"action": "sitematrix", "format": "json",
@@ -73,6 +67,13 @@ def get_sitematrix():
             for site in lang['site']:
                 if check_status(site):
                     yield site['url']
+
+
+def check_status(checksite):
+    """Return true only if wiki is public and open"""
+    return ((checksite.get('closed') is None)
+            and (checksite.get('private') is None)
+            and (checksite.get('fishbowl') is None))
 
 
 def list_pages(site, target):
@@ -159,7 +160,7 @@ def run_check(site, runOverride):
     run = runpage.text.endswith('True')
     if run is False and runOverride is False:
         print('Runpage is false, quitting...')
-        raise pywikibot.UserBlocked
+        raise pywikibot.UserBlocked('Runpage is false')
 
 
 def save_page(new_text, target):
