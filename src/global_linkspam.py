@@ -230,18 +230,13 @@ def main():
     for url in sitematrix:
         try:
             cur_site = pywikibot.Site(url=url + '/wiki/MediaWiki:Delete/en')
-        except Exception:
-            skipped.append(url)
-            continue
-        # Get the combined usage on this site
-        try:
+            # Get the combined usage on this site
             pages = list_pages(cur_site, target)
+            # Generate the report data from the usage list
+            report = site_report(pages, cur_site, preload_sums, enwiki)
         except Exception:
             skipped.append(url)
             continue
-        # Generate the report data from the usage list
-        report = site_report(pages, cur_site, preload_sums, enwiki)
-
         # Only add the reports with data to the output
         if report:
             print(url)
