@@ -20,12 +20,23 @@
 import pytest
 # import requests
 # import mwparserfromhell as mwph
+import json
 import pywikibot
 import unittest.mock as mock
 import inspect
 import sys
 import os
-sys.path.append(os.path.realpath(os.path.dirname(__file__)+"/.."))
+
+__dir__ = os.path.realpath(os.path.dirname(__file__)+"/..")
+conf = os.path.join(__dir__, 'src/config.json')
+
+try:
+    open(conf, 'r')
+except FileNotFoundError:
+    with open(conf, 'w') as f:
+        json.dump({}, f)
+
+sys.path.append(__dir__)
 import src.global_linkspam as global_linkspam  # noqa: E402
 
 
