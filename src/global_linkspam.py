@@ -232,12 +232,17 @@ def main():
             skipped.append(url)
             continue
         # Get the combined usage on this site
-        pages = list_pages(cur_site, target)
+        try:
+            pages = list_pages(cur_site, target)
+        except Exception:
+            skipped.append(url)
+            continue
         # Generate the report data from the usage list
         report = site_report(pages, cur_site, preload_sums, enwiki)
 
         # Only add the reports with data to the output
         if report:
+            print(url)
             site_reports[cur_site.dbName()] = report
             counts[cur_site.dbName()] = report['count']
 
