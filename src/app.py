@@ -30,8 +30,8 @@ logging.basicConfig(filename='linkspam.log', level=logging.DEBUG)
 app = flask.Flask(__name__)
 
 # Load config from json in the same directory as the app
-__dir__ = os.path.dirname(__file__)
-with open(os.path.join(__dir__, 'config.json')) as f:
+_dir = os.path.dirname(__file__)
+with open(os.path.join(_dir, 'config.json')) as f:
     app.config.update(json.load(f))
 
 # Get the short hash for the current git commit

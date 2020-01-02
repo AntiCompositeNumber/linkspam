@@ -27,6 +27,8 @@ import os
 import argparse
 import logging
 import requests
+from typing import Dict, Iterator, Union, List, cast, Any, Tuple
+import toolforge  # type: ignore
 import pywikibot  # type: ignore
 from pywikibot import pagegenerators  # type: ignore
 
@@ -39,11 +41,35 @@ with open(os.path.join(_dir, "config.json")) as f:
     config.update(json.load(f))
 
 
-def do_db_query(db_name, query):
-    pass
+def do_db_query(db_name: str, query: str) -> Any:
+    """Uses the toolforge library to query the replica databases"""
+    try:
+        f = open("/etc/wmcs-project")
+    except FileNotFoundError:
+        raise ConnectionError("Not running on Toolforge, database unavailable")
+    else:
+        f.close()
+
+    conn = toolforge.connect(db_name)
+    with conn.cursor() as cur:
+        cur.execute(query)
+        res = cur.fetchall()
+    return res
 
 
-def get_sitematrix():
+def get_sitematrix() -> Iterator[Tuple[str, str]]:
+    """Try to get the sitematrix from the db, falling back to the API"""
+    query = "SELECT url, dbname FROM meta_p.wiki WHERE is_closed = 0;"
+    try:
+        sitematrix = do_db_query("meta_p", query)
+    except Exception:
+        sitematrix = api_get_sitematrix()
+
+    for site in sitematrix:
+        yield site
+
+
+def api_get_sitematrix() -> Iterator[Tuple[str, str]]:
     """Request the sitematrix from the api, check if open, then yield URLs"""
 
     # Construct the request to the Extension:Sitematrix api
@@ -51,7 +77,7 @@ def get_sitematrix():
         "action": "sitematrix",
         "format": "json",
         "smlangprop": "site",
-        "smsiteprop": "url",
+        "smsiteprop": "url|dbname",
     }
     headers = {
         "user-agent": "HijackSpam "
@@ -74,14 +100,14 @@ def get_sitematrix():
         elif key == "specials":
             for site in lang:
                 if check_status(site):
-                    yield site["url"]
+                    yield (site["url"], site["dbname"])
         else:
             for site in lang["site"]:
                 if check_status(site):
-                    yield site["url"]
+                    yield (site["url"], site["dbname"])
 
 
-def check_status(checksite):
+def check_status(checksite: Dict[str, str]) -> bool:
     """Return true only if wiki is public and open"""
     return (
         (checksite.get("closed") is None)
@@ -90,7 +116,7 @@ def check_status(checksite):
     )
 
 
-def list_pages(site, target):
+def list_pages(site: pywikibot.Site, target: str) -> pywikibot.page.BasePage:
     """Takes a site object and yields the pages linking to the target"""
 
     # Linksearch is specific, and treats http/https and TLD/subdomain
@@ -115,7 +141,12 @@ def list_pages(site, target):
             yield page
 
 
-def site_report(pages, site, preload_sums, report_site):
+def site_report(
+    pages: List[pywikibot.page.BasePage],
+    site: pywikibot.Site,
+    preload_sums: Dict[str, str],
+    report_site: pywikibot.Site,
+) -> Dict[str, Union[int, List[Dict[str, str]]]]:
     """Generate the full linksearch report for a site"""
 
     # Try to get preloaded edit summaries from config.
@@ -126,7 +157,7 @@ def site_report(pages, site, preload_sums, report_site):
     )
 
     # Prepare an empty list for reports
-    reports = []
+    reports: List[Dict[str, str]] = []
 
     # Iterate over the pages in the data
     for page in pages:
@@ -154,7 +185,7 @@ def site_report(pages, site, preload_sums, report_site):
         return {}
 
 
-def summary_table(counts):
+def summary_table(counts: Dict[str, int]) -> Dict[str, Union[Dict[str, int], int]]:
     """Takes a dictionary of dbnames and counts and returns at table"""
 
     # Filter for only wikis with non-zero counts
@@ -167,7 +198,7 @@ def summary_table(counts):
     return dict(entries=entries, total_pages=total_pages, total_wikis=total_wikis)
 
 
-def run_check(site, runOverride):
+def run_check(site: pywikibot.Site, runOverride: bool) -> None:
     """Prevents the tool from running if the runpage is false"""
     # TODO issue #16
     runpage = pywikibot.Page(site, "User:AntiCompositeBot/HijackSpam/Run")
@@ -177,16 +208,16 @@ def run_check(site, runOverride):
         raise pywikibot.UserBlocked("Runpage is false")
 
 
-def save_page(new_text, target):
+def save_page(report_data: Dict[str, Union[dict, str]], target: pywikibot.Page) -> None:
     """Saves the report data and updates the config"""
     data_dir = config["linkspam_data_dir"]
     with open(os.path.join(data_dir, target + ".json"), "w") as f:
-        json.dump(new_text, f, indent=4)
+        json.dump(report_data, f, indent=4)
 
     with open(os.path.join(data_dir, "linkspam_config.json"), "r") as f:
         linkspam_config = json.load(f)
 
-    linkspam_config[target]["last_update"] = new_text["start_time"]
+    linkspam_config[target]["last_update"] = report_data["start_time"]
 
     # If the report is marked new, mark it not new.
     if linkspam_config[target]["status"] == "new":
@@ -199,9 +230,9 @@ def save_page(new_text, target):
         json.dump(linkspam_config, f, indent=4)
 
 
-def main():
+def main() -> None:
     # define empty dicts
-    counts = {}
+    counts: Dict[str, int] = {}
     output = {}
 
     # Parse command line arguments for target domain
@@ -230,7 +261,7 @@ def main():
     # Get the list of sites from get_sitematrix(), retrying once
     try:
         sitematrix = get_sitematrix()
-    except requests.exceptions:
+    except requests.HTTPError:
         time.sleep(5)
         sitematrix = get_sitematrix()
 
@@ -241,8 +272,8 @@ def main():
     # Run through the sitematrix. If pywikibot works on that site, generate
     # a report. Otherwise, add it to the skipped list.
     skipped = []
-    site_reports = {}
-    for url in sitematrix:
+    site_reports: Dict[str, Dict[str, Union[int, List[Dict[str, str]]]]] = {}
+    for dbname, url in sitematrix:
         try:
             cur_site = pywikibot.Site(url=url + "/wiki/MediaWiki:Delete/en")
             # Get the combined usage on this site
@@ -256,7 +287,7 @@ def main():
         if report:
             print(url)
             site_reports[cur_site.dbName()] = report
-            counts[cur_site.dbName()] = report["count"]
+            counts[cur_site.dbName()] = cast(int, report["count"])
 
     # Add all the generated reports and the skipped sites to the output
     output["site_reports"] = site_reports

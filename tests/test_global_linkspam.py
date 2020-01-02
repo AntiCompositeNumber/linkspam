@@ -27,8 +27,8 @@ import inspect
 import sys
 import os
 
-__dir__ = os.path.realpath(os.path.dirname(__file__)+"/..")
-conf = os.path.join(__dir__, 'src/config.json')
+_dir = os.path.realpath(os.path.dirname(__file__)+"/..")
+conf = os.path.join(_dir, 'src/config.json')
 
 try:
     open(conf, 'r')
@@ -36,7 +36,7 @@ except FileNotFoundError:
     with open(conf, 'w') as f:
         json.dump({}, f)
 
-sys.path.append(__dir__)
+sys.path.append(_dir)
 import src.global_linkspam as global_linkspam  # noqa: E402
 
 
@@ -44,7 +44,7 @@ def test_get_sitematrix():
     matrix = global_linkspam.get_sitematrix
     assert inspect.isgeneratorfunction(matrix)
     l_matrix = list(matrix())
-    assert 'https://en.wikipedia.org' in l_matrix
+    assert ('https://en.wikipedia.org', 'enwiki') in l_matrix
     assert len(l_matrix) > 700
 
 
