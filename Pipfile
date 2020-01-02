@@ -7,6 +7,8 @@ verify_ssl = true
 mypy = "*"
 black = "*"
 pipenv-to-requirements = "*"
+flake8 = "*"
+coveralls = "*"
 
 [packages]
 certifi = "*"
