@@ -10,20 +10,8 @@
 # `Pipfile.lock` and then regenerate `requirements*.txt`.
 ################################################################################
 
-appdirs==1.4.3
-attrs==19.3.0
-black==19.10b0
-certifi==2019.11.28
-click==7.0
-mypy-extensions==0.4.3
-mypy==0.761
-pathspec==0.7.0
-pbr==5.4.4
-pipenv-to-requirements==0.9.0
-pipenv==2018.11.26
-regex==2019.12.20
-toml==0.10.0
-typed-ast==1.4.0
-typing-extensions==3.7.4.1
-virtualenv-clone==0.5.3
-virtualenv==16.7.9
+black
+coveralls
+flake8
+mypy
+pipenv-to-requirements
