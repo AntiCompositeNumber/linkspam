@@ -17,133 +17,160 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import pytest  # type: ignore
+
 # import requests
 # import mwparserfromhell as mwph
 import json
-import pywikibot
+import pywikibot  # type: ignore
 import unittest.mock as mock
 import inspect
 import sys
 import os
 
-__dir__ = os.path.realpath(os.path.dirname(__file__)+"/..")
-conf = os.path.join(__dir__, 'src/config.json')
+_dir = os.path.realpath(os.path.dirname(__file__) + "/..")
+conf = os.path.join(_dir, "src/config.json")
 
 try:
-    open(conf, 'r')
+    open(conf, "r")
 except FileNotFoundError:
-    with open(conf, 'w') as f:
+    with open(conf, "w") as f:
         json.dump({}, f)
 
-sys.path.append(__dir__)
+sys.path.append(_dir)
 import src.global_linkspam as global_linkspam  # noqa: E402
 
 
-def test_get_sitematrix():
-    matrix = global_linkspam.get_sitematrix
-    assert inspect.isgeneratorfunction(matrix)
-    l_matrix = list(matrix())
-    assert 'https://en.wikipedia.org' in l_matrix
+def test_get_sitematrix_db():
+    data = [
+        ("https://en.wikipedia.org", "enwiki"),
+        ("https://commons.wikimedia.org", "commonswiki"),
+    ]
+    with mock.patch("src.global_linkspam.do_db_query", return_value=data,) as m:
+        global_linkspam.on_toolforge = True
+        matrix = global_linkspam.get_sitematrix()
+        l_matrix = list(matrix)
+        m.assert_called_once_with("meta_p", mock.ANY)
+
+    assert inspect.isgenerator(matrix)
+    assert l_matrix == data
+
+
+def test_get_sitematrix_api():
+    global_linkspam.on_toolforge = False
+    matrix = global_linkspam.get_sitematrix()
+    assert inspect.isgenerator(matrix)
+    l_matrix = list(matrix)
+    assert ("https://en.wikipedia.org", "enwiki") in l_matrix
+    assert ("https://otrs.wikimedia.org", "otrs_wikiwiki") not in l_matrix
     assert len(l_matrix) > 700
 
 
 def test_check_status_closed():
-    checksite = {'closed': '',
-                 'code': 'wikimania2005',
-                 'dbname': 'wikimania2005wiki',
-                 'lang': 'wikimania2005',
-                 'sitename': 'Wikipedia',
-                 'url': 'https://wikimania2005.wikimedia.org'}
+    checksite = {
+        "closed": "",
+        "code": "wikimania2005",
+        "dbname": "wikimania2005wiki",
+        "lang": "wikimania2005",
+        "sitename": "Wikipedia",
+        "url": "https://wikimania2005.wikimedia.org",
+    }
 
     assert not global_linkspam.check_status(checksite)
 
 
 def test_check_status_private():
-    checksite = {'code': 'wikimaniateam',
-                 'dbname': 'wikimaniateamwiki',
-                 'lang': 'en',
-                 'private': '',
-                 'sitename': 'WikimaniaTeam',
-                 'url': 'https://wikimaniateam.wikimedia.org'}
+    checksite = {
+        "code": "wikimaniateam",
+        "dbname": "wikimaniateamwiki",
+        "lang": "en",
+        "private": "",
+        "sitename": "WikimaniaTeam",
+        "url": "https://wikimaniateam.wikimedia.org",
+    }
 
     assert not global_linkspam.check_status(checksite)
 
 
 def test_check_status_fishbowl():
-    checksite = {'code': 'nostalgia',
-                 'dbname': 'nostalgiawiki',
-                 'fishbowl': '',
-                 'lang': 'nostalgia',
-                 'sitename': 'Wikipedia',
-                 'url': 'https://nostalgia.wikipedia.org'}
+    checksite = {
+        "code": "nostalgia",
+        "dbname": "nostalgiawiki",
+        "fishbowl": "",
+        "lang": "nostalgia",
+        "sitename": "Wikipedia",
+        "url": "https://nostalgia.wikipedia.org",
+    }
 
     assert not global_linkspam.check_status(checksite)
 
 
 def test_check_status_open():
-    checksite = {'url': 'https://en.wikipedia.org'}
+    checksite = {"url": "https://en.wikipedia.org"}
 
     assert global_linkspam.check_status(checksite)
 
 
-def test_list_pages():
+def test_list_pages_api():
     m = mock.MagicMock()
-    m.return_value = ['Test']
-    with mock.patch('pywikibot.pagegenerators.LinksearchPageGenerator', m):
-        output = list(global_linkspam.list_pages('site', 'example.com'))
+    m.return_value = ["Test"]
+    global_linkspam.on_toolforge = False
+    with mock.patch("pywikibot.pagegenerators.LinksearchPageGenerator", m):
+        output = list(global_linkspam.api_list_pages("site", "example.com"))
 
     assert len(output) == 4
-    calls = [mock.call('example.com', site='site', protocol='http'),
-             mock.call('example.com', site='site', protocol='https'),
-             mock.call('*.example.com', site='site', protocol='http'),
-             mock.call('*.example.com', site='site', protocol='https')]
+    calls = [
+        mock.call("example.com", site="site", protocol="http"),
+        mock.call("example.com", site="site", protocol="https"),
+        mock.call("*.example.com", site="site", protocol="http"),
+        mock.call("*.example.com", site="site", protocol="https"),
+    ]
     assert m.mock_calls == calls
 
 
 def test_run_check_true():
     m = mock.MagicMock()
     n = mock.MagicMock()
-    n.text = 'True'
+    n.text = "True"
     m.return_value = n
-    with mock.patch('pywikibot.Page', m):
-        assert global_linkspam.run_check('', False) is None
+    with mock.patch("pywikibot.Page", m):
+        assert global_linkspam.run_check("", False) is None
 
 
 def test_run_check_false():
     m = mock.MagicMock()
     n = mock.MagicMock()
-    n.text = 'False'
+    n.text = "False"
     m.return_value = n
-    with mock.patch('pywikibot.Page', m):
+    with mock.patch("pywikibot.Page", m):
         with pytest.raises(pywikibot.UserBlocked):
-            global_linkspam.run_check('', False)
+            global_linkspam.run_check("", False)
 
 
 def test_run_check_nonsense():
     m = mock.MagicMock()
     n = mock.MagicMock()
-    n.text = 'Bananas'
+    n.text = "Bananas"
     m.return_value = n
-    with mock.patch('pywikibot.Page', m):
+    with mock.patch("pywikibot.Page", m):
         with pytest.raises(pywikibot.UserBlocked):
-            global_linkspam.run_check('', False)
+            global_linkspam.run_check("", False)
 
 
 def test_run_check_blank():
     m = mock.MagicMock()
     n = mock.MagicMock()
-    n.text = ''
+    n.text = ""
     m.return_value = n
-    with mock.patch('pywikibot.Page', m):
+    with mock.patch("pywikibot.Page", m):
         with pytest.raises(pywikibot.UserBlocked):
-            global_linkspam.run_check('', False)
+            global_linkspam.run_check("", False)
 
 
 def test_run_check_override():
     m = mock.MagicMock()
     n = mock.MagicMock()
-    n.text = 'False'
+    n.text = "False"
     m.return_value = n
-    with mock.patch('pywikibot.Page', m):
-        global_linkspam.run_check('', True)
+    with mock.patch("pywikibot.Page", m):
+        global_linkspam.run_check("", True)

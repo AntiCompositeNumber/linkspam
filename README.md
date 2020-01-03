@@ -1,4 +1,8 @@
 # linkspam
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/AntiCompositeNumber/linkspam/Python%20application)
+[![Coverage Status](https://coveralls.io/repos/github/AntiCompositeNumber/linkspam/badge.svg?branch=master)](https://coveralls.io/github/AntiCompositeNumber/linkspam?branch=master)
+![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/AntiCompositeNumber/linkspam)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Generates reports of domain usage in external links across all Wikimedia wikis. Written in Python by AntiCompositeNumber. This tool runs on Wikimedia Toolforge at https://tools.wmflabs.org/linkspam/.
 

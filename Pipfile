@@ -4,6 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+mypy = "*"
+black = "*"
+pipenv-to-requirements = "*"
+flake8 = "*"
+coveralls = "*"
 
 [packages]
 certifi = "*"
@@ -19,6 +24,11 @@ Jinja2 = "*"
 MarkupSafe = "*"
 Werkzeug = "*"
 pytest = "*"
+toolforge = "*"
+requests-oauthlib = "*"
 
 [requires]
-python_version = "3.5"
+python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true
