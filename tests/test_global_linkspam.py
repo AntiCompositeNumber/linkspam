@@ -17,12 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import pytest  # type: ignore
 
 # import requests
 # import mwparserfromhell as mwph
 import json
-import pywikibot
+import pywikibot  # type: ignore
 import unittest.mock as mock
 import inspect
 import sys
@@ -41,11 +41,28 @@ sys.path.append(_dir)
 import src.global_linkspam as global_linkspam  # noqa: E402
 
 
-def test_get_sitematrix():
-    matrix = global_linkspam.get_sitematrix
-    assert inspect.isgeneratorfunction(matrix)
-    l_matrix = list(matrix())
+def test_get_sitematrix_db():
+    data = [
+        ("https://en.wikipedia.org", "enwiki"),
+        ("https://commons.wikimedia.org", "commonswiki"),
+    ]
+    with mock.patch("src.global_linkspam.do_db_query", return_value=data,) as m:
+        global_linkspam.on_toolforge = True
+        matrix = global_linkspam.get_sitematrix()
+        l_matrix = list(matrix)
+        m.assert_called_once_with("meta_p", mock.ANY)
+
+    assert inspect.isgenerator(matrix)
+    assert l_matrix == data
+
+
+def test_get_sitematrix_api():
+    global_linkspam.on_toolforge = False
+    matrix = global_linkspam.get_sitematrix()
+    assert inspect.isgenerator(matrix)
+    l_matrix = list(matrix)
     assert ("https://en.wikipedia.org", "enwiki") in l_matrix
+    assert ("https://otrs.wikimedia.org", "otrs_wikiwiki") not in l_matrix
     assert len(l_matrix) > 700
 
 
@@ -94,11 +111,12 @@ def test_check_status_open():
     assert global_linkspam.check_status(checksite)
 
 
-def test_list_pages():
+def test_list_pages_api():
     m = mock.MagicMock()
     m.return_value = ["Test"]
+    global_linkspam.on_toolforge = False
     with mock.patch("pywikibot.pagegenerators.LinksearchPageGenerator", m):
-        output = list(global_linkspam.list_pages("site", "example.com"))
+        output = list(global_linkspam.api_list_pages("site", "example.com"))
 
     assert len(output) == 4
     calls = [

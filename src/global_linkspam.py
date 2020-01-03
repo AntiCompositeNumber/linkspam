@@ -34,21 +34,27 @@ from pywikibot import pagegenerators  # type: ignore
 
 version = "2.dev0"
 
+logging.basicConfig(filename="linkspam.log", level=logging.DEBUG)
+
 # Load config.json in the same directory as the code
 config: dict = {}
 _dir = os.path.dirname(__file__)
 with open(os.path.join(_dir, "config.json")) as f:
     config.update(json.load(f))
 
+try:
+    f = open("/etc/wmcs-project")
+except FileNotFoundError:
+    on_toolforge = False
+else:
+    f.close()
+    on_toolforge = True
+
 
 def do_db_query(db_name: str, query: str) -> Any:
     """Uses the toolforge library to query the replica databases"""
-    try:
-        f = open("/etc/wmcs-project")
-    except FileNotFoundError:
+    if not on_toolforge:
         raise ConnectionError("Not running on Toolforge, database unavailable")
-    else:
-        f.close()
 
     conn = toolforge.connect(db_name)
     with conn.cursor() as cur:
@@ -80,11 +86,8 @@ def api_get_sitematrix() -> Iterator[Tuple[str, str]]:
         "smsiteprop": "url|dbname",
     }
     headers = {
-        "user-agent": "HijackSpam "
-        + version
-        + " as AntiCompositeBot"
-        + " on Toolforge. User:AntiCompositeNumber, pywikibot/"
-        + pywikibot.__version__
+        "user-agent": "HijackSpam {version} as AntiCompositeBot on Toolforge. "
+        "User:AntiCompositeNumber, pywikibot/{pywikibot.__version__}"
     }
     url = "https://meta.wikimedia.org/w/api.php"
 
@@ -118,6 +121,32 @@ def check_status(checksite: Dict[str, str]) -> bool:
 
 def list_pages(site: pywikibot.Site, target: str) -> pywikibot.page.BasePage:
     """Takes a site object and yields the pages linking to the target"""
+    if not on_toolforge:
+        # Not running on Toolforge, fall back to API
+        for page in api_list_pages(site, target):
+            yield page
+    else:
+        f.close()
+
+        name, sep, tld = target.partition(".")
+        if not sep:
+            raise ValueError('Domain must be in the form "example.com')
+        for char in ["'", '"', "/", ":"]:
+            assert char not in target
+
+        for protocol in ["http", "https"]:
+            query = (
+                "SELECT page_namespace, page_title "
+                "FROM externallinks "
+                "JOIN page on page_id=el_from "
+                f"WHERE el_index LIKE '{protocol}://{tld}.{name}.%' "
+            )
+            for page in pagegenerators.MySQLPageGenerator(query, site=site):
+                yield page
+
+
+def api_list_pages(site: pywikibot.Site, target: str) -> pywikibot.page.BasePage:
+    """Takes a site object and yields the pages linking to the target"""
 
     # Linksearch is specific, and treats http/https and TLD/subdomain
     # links differently, so we need to run through them all
@@ -134,7 +163,6 @@ def list_pages(site: pywikibot.Site, target: str) -> pywikibot.page.BasePage:
         else:
             ctar = target
 
-        # Iterate over the pages and yeild them
         for page in pagegenerators.LinksearchPageGenerator(
             ctar, site=site, protocol=protocol
         ):
@@ -273,7 +301,7 @@ def main() -> None:
     # a report. Otherwise, add it to the skipped list.
     skipped = []
     site_reports: Dict[str, Dict[str, Union[int, List[Dict[str, str]]]]] = {}
-    for dbname, url in sitematrix:
+    for url, dbname in sitematrix:
         try:
             cur_site = pywikibot.Site(url=url + "/wiki/MediaWiki:Delete/en")
             # Get the combined usage on this site
@@ -281,13 +309,14 @@ def main() -> None:
             # Generate the report data from the usage list
             report = site_report(pages, cur_site, preload_sums, enwiki)
         except Exception:
+            logging.exception(f"Skipping {url}")
             skipped.append(url)
             continue
         # Only add the reports with data to the output
         if report:
             print(url)
-            site_reports[cur_site.dbName()] = report
-            counts[cur_site.dbName()] = cast(int, report["count"])
+            site_reports[dbname] = report
+            counts[dbname] = cast(int, report["count"])
 
     # Add all the generated reports and the skipped sites to the output
     output["site_reports"] = site_reports
