@@ -1,5 +1,7 @@
 # linkspam
 
+# This project is no longer maintained and has been disabled.
+
 Generates reports of domain usage in external links across all Wikimedia wikis. Written in Python by AntiCompositeNumber. This tool runs on Wikimedia Toolforge at https://tools.wmflabs.org/linkspam/.
 
 ## Configuration
